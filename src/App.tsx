@@ -1,42 +1,20 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import Login from "./features/auth/pages/login"
-import Admin from "./features/admin/admin"
-import List from "./features/test/pages/list"
-import Attempt from "./features/test/pages/attempt"
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Home } from './feature/homedashboard/home';
+import { AttemptTest, CreateTest, TestList } from './feature/test';
+import { Login } from './feature/auth';
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute role="Admin">
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/tests"
-          element={
-            <ProtectedRoute role="User">
-              <List />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/tests/attempt/:attemptId"
-          element={
-            <ProtectedRoute role="User">
-              <TestAttempt />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-  )
-}
+export const App: React.FC = () => {
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/" element={<Navigate to="/home" />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/test/attempt/:id" element={<AttemptTest />} />
+                <Route path="/test/create" element={<CreateTest />} />
+                <Route path="/test/reports" element={<TestList />} />
+            </Routes>
+        </BrowserRouter>
+    );
+};

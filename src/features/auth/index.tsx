@@ -1,13 +1,1 @@
-import { Route, Routes } from "react-router-dom";
-import Login from "./pages/login";
-import Register from "./pages/register";
-
-
-export default function Auth() {
-    return (
-        <Routes>
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
-        </Routes>
-    );
-}
+export { Login } from './pages/login';

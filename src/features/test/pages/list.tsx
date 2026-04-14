@@ -1,43 +1,28 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from 'react';
+import { api } from '../../../services';
+import { TestReportDto } from '../../../types/master';
+import { Grid } from '../../../shared/component/grid';
 
-type Test = {
-  id: number
-  title: string
-  description: string
-  duration: number
-}
+export const TestList: React.FC = () => {
+    const [reports, setReports] = useState<TestReportDto[]>([]);
 
-export default function List() {
-  const [tests, setTests] = useState<Test[]>([])
-  const [loading, setLoading] = useState(true)
+    useEffect(() => {
+        api.getTestReports().then(setReports);
+    }, []);
 
-  useEffect(() => {
-    fetch("https://localhost:5001/api/test")
-      .then(res => res.json())
-      .then(data => {
-        setTests(data)
-        setLoading(false)
-      })
-  }, [])
-
-  if (loading) return <div>Loading...</div>
-
-  return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Test List</h1>
-
-      <div className="grid gap-4">
-        {tests.map(test => (
-          <div key={test.id} className="border p-4 rounded-xl shadow">
-            <h2 className="text-lg font-semibold">{test.title}</h2>
-            <p>{test.description}</p>
-            <p>Duration: {test.duration} mins</p>
-            <button className="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
-              Start Test
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+    return (
+        <div style={{ padding: '20px' }}>
+            <h1>Test Reports</h1>
+            <Grid columns={2}>
+                <strong>Test Name</strong>
+                <strong>Users Appeared</strong>
+                {reports.map(r => (
+                    <React.Fragment key={r.testId}>
+                        <span>{r.testName}</span>
+                        <span>{r.usersAppeared}</span>
+                    </React.Fragment>
+                ))}
+            </Grid>
+        </div>
+    );
+};

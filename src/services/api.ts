@@ -1,38 +1,37 @@
-export async function get<TResult>(url: string) {
-  return await request<TResult>('GET', url);
-}
+import { TestDto, TestReportDto, TestResultDto } from '../types/master';
 
-export async function post<TResult>(url: string, body: unknown) {
-  return await request<TResult>('POST', url, body);
-}
+const API_BASE_URL = 'http://localhost:5000/api';
 
-export async function put<TResult>(url: string, body: unknown) {
-  return await request<TResult>('PUT', url, body);
-}
-
-export async function patch<TResult>(url: string, body: unknown) {
-  return await request<TResult>('PATCH', url, body);
-}
-
-export async function del<TResult>(url: string) {
-  return await request<TResult>('DELETE', url);
-}
-
-async function request<TResult>(method: string, url: string, body?: unknown) {
-  const response = await fetch('http://localhost:5228/api/' + url, {
-    method,
-    body: body ? JSON.stringify(body) : undefined,
-    headers: {
-      Origin: window.location.host,
-      'Content-Type': 'application/json; charset=utf-8',
+export const api = {
+    getPublishedTests: async (): Promise<TestDto[]> => {
+        const response = await fetch(`${API_BASE_URL}/tests/published`);
+        return response.json();
     },
-  });
-
-  if (response.headers.get('Content-Length') === '0') {
-    return;
-  }
-
-  const json = await response.json();
-
-  return json as TResult;
-}
+    getTestById: async (id: string): Promise<TestDto> => {
+        const response = await fetch(`${API_BASE_URL}/tests/${id}`);
+        return response.json();
+    },
+    createTest: async (test: Partial<TestDto>): Promise<TestDto> => {
+        const response = await fetch(`${API_BASE_URL}/tests`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(test)
+        });
+        return response.json();
+    },
+    publishTest: async (id: string): Promise<void> => {
+        await fetch(`${API_BASE_URL}/tests/${id}/publish`, { method: 'POST' });
+    },
+    submitAttempt: async (testId: string, answers: Record<string, string>): Promise<TestResultDto> => {
+        const response = await fetch(`${API_BASE_URL}/tests/${testId}/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answers })
+        });
+        return response.json();
+    },
+    getTestReports: async (): Promise<TestReportDto[]> => {
+        const response = await fetch(`${API_BASE_URL}/tests/reports`);
+        return response.json();
+    }
+};
