@@ -1,1 +1,2 @@
-export { Login } from './pages/login';
+export { Login } from './pages/login'; 
+export { Register } from './pages/register';

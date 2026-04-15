@@ -1,16 +1,16 @@
-export interface OptionDto {
+export interface Option {
     id: string;
     text: string;
     isCorrect: boolean;
 }
 
-export interface QuestionDto {
+export interface Question {
     id: string;
     text: string;
     options: OptionDto[];
 }
 
-export interface TestDto {
+export interface Test {
     id: string;
     name: string;
     subject: string;
@@ -20,14 +20,20 @@ export interface TestDto {
     questions: QuestionDto[];
 }
 
-export interface TestReportDto {
+export interface TestReport {
     testId: string;
     testName: string;
     usersAppeared: number;
 }
 
-export interface TestResultDto {
+export interface TestResult {
     score: number;
     total: number;
     passed: boolean;
+} 
+export interface AttemptTest {
+    userId: string;
+    testId: string;
+    totalScore: number;
+    ispassed: boolean;
 }
