@@ -1,47 +1,53 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
+import type { Test, Question, AttemptResult, Answers } from "../../types";
 
 export const AttemptTest: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [test, setTest] = useState<any>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [answers, setAnswers] = useState<any>({});
-  const [timeLeft, setTimeLeft] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [result, setResult] = useState<any>(null);
-  const [started, setStarted] = useState(false);
+  const testId = Number(id);
 
-  const [loading, setLoading] = useState(true);
+  const [test, setTest] = useState<Test | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [answers, setAnswers] = useState<Answers>({});
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [result, setResult] = useState<AttemptResult | null>(null);
+  const [started, setStarted] = useState<boolean>(false);
+
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔹 Load test
   useEffect(() => {
-    if (!id) return;
+    if (!testId) return;
 
-    api.getTestById(id)
-      .then((data) => {
-        setTest(data);
-        setTimeLeft((data?.durationMinutes || 60) * 60);
-      })
-      .catch(() => setError("Failed to load test"))
-      .finally(() => setLoading(false));
-  }, [id]);
+    const loadData = async () => {
+      try {
+        const testData = await api.getTestById(testId.toString());
+        const questionData = await api.getQuestionsByTestId(testId);
 
-  // 🔹 Timer
+        setTest(testData);
+        setQuestions(questionData);
+        setTimeLeft((testData.durationMinutes || 60) * 60);
+      } catch {
+        setError("Failed to load test");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [testId]);
+
   useEffect(() => {
     if (started && timeLeft > 0 && !result) {
       const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
       return () => clearTimeout(timer);
     }
 
-    if (timeLeft === 0 && started) {
-      // eslint-disable-next-line react-hooks/immutability
+    if (timeLeft === 0 && started && !result) {
       handleSubmit();
     }
   }, [timeLeft, started, result]);
@@ -49,7 +55,7 @@ export const AttemptTest: React.FC = () => {
   const handleStart = () => setStarted(true);
 
   const handleNext = () => {
-    if (currentIndex < test.questions.length - 1) {
+    if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       handleSubmit();
@@ -57,22 +63,38 @@ export const AttemptTest: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (!test) return;
 
-    try {
-      const res = await api.submitAttempt(test.id, user.id || "temp", answers);
-      setResult(res);
-    } catch {
-      alert("Submit failed");
-    }
-  };
+  const storedUser = localStorage.getItem("user");
+  if (!storedUser) {
+    alert("User not logged in");
+    navigate("/");
+    return;
+  }
 
-  // 🔹 States
+  const user = JSON.parse(storedUser) as { id: number };
+
+  if (!user.id) {
+    alert("Invalid user");
+    navigate("/");
+    return;
+  }
+
+  try {
+    const res = await api.submitAttempt(
+      Number(test.id),
+      user.id,
+      answers
+    );
+    setResult(res);
+  } catch {
+    alert("Submit failed");
+  }
+};
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!test) return <div className="p-6">No test found</div>;
 
-  // 🔹 Result screen
   if (result) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
@@ -96,7 +118,6 @@ export const AttemptTest: React.FC = () => {
     );
   }
 
-  // 🔹 Start screen
   if (!started) {
     return (
       <div className="p-6 max-w-xl mx-auto bg-white shadow rounded">
@@ -107,7 +128,7 @@ export const AttemptTest: React.FC = () => {
         <div className="mt-4 space-y-2">
           <p><b>Subject:</b> {test.subject}</p>
           <p><b>Duration:</b> {test.durationMinutes} min</p>
-          <p><b>Questions:</b> {test.questions?.length || 0}</p>
+          <p><b>Questions:</b> {questions.length}</p>
         </div>
 
         <button
@@ -120,18 +141,16 @@ export const AttemptTest: React.FC = () => {
     );
   }
 
-  const q = test.questions[currentIndex];
+  const q = questions[currentIndex];
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = ("0" + (timeLeft % 60)).slice(-2);
 
   return (
     <div className="p-6 max-w-xl mx-auto">
-
-      {/* Header */}
       <div className="flex justify-between mb-4">
         <h2 className="font-semibold">
-          Question {currentIndex + 1}/{test.questions.length}
+          Question {currentIndex + 1}/{questions.length}
         </h2>
 
         <span className={timeLeft < 60 ? "text-red-500" : ""}>
@@ -139,16 +158,14 @@ export const AttemptTest: React.FC = () => {
         </span>
       </div>
 
-      {/* Question */}
       <div className="bg-white p-4 shadow rounded">
         <p className="mb-4 font-medium">{q.text}</p>
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-explicit-any
-        {q.options.map((opt: any) => (
+        {q.options.map((opt) => (
           <label key={opt.id} className="block mb-2">
             <input
               type="radio"
-              name={q.id}
+              name={q.id.toString()}
               value={opt.id}
               checked={answers[q.id] === opt.id}
               onChange={() =>
@@ -161,12 +178,11 @@ export const AttemptTest: React.FC = () => {
         ))}
       </div>
 
-      {/* Next button */}
       <button
         onClick={handleNext}
         className="mt-4 w-full bg-blue-500 text-white py-2 rounded"
       >
-        {currentIndex === test.questions.length - 1
+        {currentIndex === questions.length - 1
           ? "Submit Test"
           : "Next"}
       </button>

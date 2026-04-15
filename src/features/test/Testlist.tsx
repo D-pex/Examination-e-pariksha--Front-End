@@ -1,14 +1,19 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import  type  { Test } from "../../types";
 
 export const TestList = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [tests, setTests] = useState<any[]>([]);
+  const [tests, setTests] = useState<Test[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.getTests().then(setTests);
+    const loadTests = async () => {
+      const data = await api.getTests();
+      setTests(data);
+    };
+
+    loadTests();
   }, []);
 
   return (
@@ -18,12 +23,12 @@ export const TestList = () => {
       <div className="grid grid-cols-3 gap-4">
         {tests.map((t) => (
           <div key={t.id} className="bg-white p-4 shadow rounded">
-            <h2>{t.name}</h2>
-            <p>{t.subject}</p>
+            <h2 className="font-semibold">{t.name}</h2>
+            <p className="text-sm text-gray-500">{t.subject}</p>
 
             <button
               onClick={() => navigate(`/attempt/${t.id}`)}
-              className="bg-blue-500 text-white px-2 py-1 mt-2"
+              className="bg-blue-500 text-white px-2 py-1 mt-2 rounded"
             >
               Attempt
             </button>
