@@ -1,4 +1,13 @@
-import type { Answers, AttemptResult, CreateQuestionRequest, CreateTestRequest, LoginRequest, Question, RegisterRequest, Test, User } from "../types";
+import type {
+  AttemptResult,
+  CreateQuestionRequest,
+  CreateTestRequest,
+  LoginRequest,
+  Question,
+  RegisterRequest,
+  Test,
+  User
+} from "../types";
 
 const BASE_URL = "http://localhost:5179/api";
 
@@ -40,15 +49,30 @@ export const api = {
     return res.json();
   },
 
-  submitAttempt: async (
-    testId: number,
-    userId: number,
-    answers: Answers
-  ): Promise<AttemptResult> => {
-    const res = await fetch(`${BASE_URL}/attempts`, {
+  startAttempt: async (userId: number, testId: number) => {
+    const res = await fetch(`${BASE_URL}/attempts/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ testId, userId, answers }),
+      body: JSON.stringify({ userId, testId }),
+    });
+    return res.json();
+  },
+
+  submitAnswer: async (
+    attemptId: number,
+    questionId: number,
+    selectedOptionId: number
+  ) => {
+    await fetch(`${BASE_URL}/attempts/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attemptId, questionId, selectedOptionId }),
+    });
+  },
+
+  submitTestFinal: async (attemptId: number): Promise<AttemptResult> => {
+    const res = await fetch(`${BASE_URL}/attempts/submit/${attemptId}`, {
+      method: "POST",
     });
     return res.json();
   },

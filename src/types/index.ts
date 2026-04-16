@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: "admin" | "user";
@@ -7,20 +7,19 @@ export interface User {
 }
 
 export interface Option {
-  id: string;
-  text: string;
+  id: number;
+  optionText: string;
 }
 
 export interface Question {
-  id: string;
-  text: string;
+  id: number;
+  questionText: string;
   options: Option[];
-  correctAnswer?: string;
-  testId: string;
+  testId: number;
 }
 
 export interface Test {
-  id: string;
+  id: number;
   name: string;
   subject: string;
   description: string;
@@ -51,10 +50,9 @@ export interface CreateTestRequest {
 }
 
 export interface CreateQuestionRequest {
-  text: string;
-  options: { text: string }[];
-  correctAnswer: string;
-  testId: string;
+  questionText: string;
+  options: { optionText: string; isCorrect: boolean }[];
+  testId: number;
 }
 
-export type Answers = Record<string, string>;
+export type Answers = Record<number, number>;

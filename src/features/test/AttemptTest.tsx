@@ -50,6 +50,7 @@ export const AttemptTest: React.FC = () => {
     if (timeLeft === 0 && started && !result) {
       handleSubmit();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, started, result]);
 
   const handleStart = () => setStarted(true);
@@ -63,34 +64,36 @@ export const AttemptTest: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-  if (!test) return;
+    if (!test) return;
 
-  const storedUser = localStorage.getItem("user");
-  if (!storedUser) {
-    alert("User not logged in");
-    navigate("/");
-    return;
-  }
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      alert("User not logged in");
+      navigate("/");
+      return;
+    }
 
-  const user = JSON.parse(storedUser) as { id: number };
+    const user = JSON.parse(storedUser) as { id: number };
 
-  if (!user.id) {
-    alert("Invalid user");
-    navigate("/");
-    return;
-  }
+    try {
+      const attempt = await api.startAttempt(user.id, Number(test.id));
 
-  try {
-    const res = await api.submitAttempt(
-      Number(test.id),
-      user.id,
-      answers
-    );
-    setResult(res);
-  } catch {
-    alert("Submit failed");
-  }
-};
+      for (const [questionId, optionId] of Object.entries(answers)) {
+        await api.submitAnswer(
+          attempt.id,
+          Number(questionId),
+          optionId
+        );
+      }
+
+      const finalResult = await api.submitTestFinal(attempt.id);
+      setResult(finalResult);
+    } catch (err) {
+      console.error(err);
+      alert("Submit failed");
+    }
+  };
+
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!test) return <div className="p-6">No test found</div>;
@@ -159,7 +162,7 @@ export const AttemptTest: React.FC = () => {
       </div>
 
       <div className="bg-white p-4 shadow rounded">
-        <p className="mb-4 font-medium">{q.text}</p>
+        <p className="mb-4 font-medium">{q.questionText}</p>
 
         {q.options.map((opt) => (
           <label key={opt.id} className="block mb-2">
@@ -173,7 +176,7 @@ export const AttemptTest: React.FC = () => {
               }
               className="mr-2"
             />
-            {opt.text}
+            {opt.optionText}
           </label>
         ))}
       </div>
