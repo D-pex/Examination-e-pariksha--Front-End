@@ -23,7 +23,9 @@ export interface Test {
   name: string;
   subject: string;
   description: string;
-  durationMinutes: number;
+  duration: number;
+  isPublished: boolean;
+  createdAt: string;
 }
 
 export interface AttemptResult {
@@ -46,12 +48,15 @@ export interface CreateTestRequest {
   name: string;
   subject: string;
   description: string;
-  durationMinutes: number;
+  duration: number;
 }
 
 export interface CreateQuestionRequest {
   questionText: string;
-  options: { optionText: string; isCorrect: boolean }[];
+  options: {
+    optionText: string;
+    isCorrect: boolean;
+  }[];
   testId: number;
 }
 

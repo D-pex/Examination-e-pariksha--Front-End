@@ -25,7 +25,7 @@ export const Home = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const tests = await api.getTests();
+        const tests = await api.getPublishedTests();
         setTestCount(tests.length);
 
         if (user.id) {

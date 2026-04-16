@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { useNavigate } from "react-router-dom";
-import  type  { Test } from "../../types";
+import type { Test } from "../../types";
 
 export const TestList = () => {
   const [tests, setTests] = useState<Test[]>([]);
@@ -9,7 +9,7 @@ export const TestList = () => {
 
   useEffect(() => {
     const loadTests = async () => {
-      const data = await api.getTests();
+      const data = await api.getPublishedTests();
       setTests(data);
     };
 

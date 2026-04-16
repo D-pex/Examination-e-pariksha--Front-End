@@ -39,7 +39,7 @@ export const Login = () => {
 
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">E-परीक्षा Portal</h1>
-          <p className="text-sm text-gray-500 mt-1">Secure Login System</p>
+          <p className="text-sm text-gray-500 mt-1">परीक्षा का नया अनुभव</p>
         </div>
 
         <div className="space-y-4">

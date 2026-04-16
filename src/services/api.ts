@@ -11,6 +11,14 @@ import type {
 
 const BASE_URL = "http://localhost:5179/api";
 
+const handleResponse = async (res: Response) => {
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "API Error");
+  }
+  return res.json();
+};
+
 export const api = {
   login: async (data: LoginRequest): Promise<User> => {
     const res = await fetch(`${BASE_URL}/users/login`, {
@@ -18,7 +26,7 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return res.json();
+    return handleResponse(res);
   },
 
   register: async (data: RegisterRequest): Promise<User> => {
@@ -27,17 +35,22 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return res.json();
+    return handleResponse(res);
   },
 
-  getTests: async (): Promise<Test[]> => {
+  getPublishedTests: async (): Promise<Test[]> => {
     const res = await fetch(`${BASE_URL}/tests`);
-    return res.json();
+    return handleResponse(res);
+  },
+
+  getAdminTests: async (): Promise<Test[]> => {
+    const res = await fetch(`${BASE_URL}/tests/all`);
+    return handleResponse(res);
   },
 
   getTestById: async (id: string): Promise<Test> => {
     const res = await fetch(`${BASE_URL}/tests/${id}`);
-    return res.json();
+    return handleResponse(res);
   },
 
   createTest: async (data: CreateTestRequest): Promise<Test> => {
@@ -46,7 +59,21 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return res.json();
+    return handleResponse(res);
+  },
+
+  publishTest: async (testId: number): Promise<string> => {
+    const res = await fetch(`${BASE_URL}/tests/${testId}/publish`, {
+      method: "PUT",
+    });
+    return handleResponse(res);
+  },
+
+  deleteTest: async (id: number): Promise<string> => {
+    const res = await fetch(`${BASE_URL}/tests/${id}`, {
+      method: "DELETE",
+    });
+    return handleResponse(res);
   },
 
   startAttempt: async (userId: number, testId: number) => {
@@ -55,7 +82,7 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, testId }),
     });
-    return res.json();
+    return handleResponse(res);
   },
 
   submitAnswer: async (
@@ -63,23 +90,24 @@ export const api = {
     questionId: number,
     selectedOptionId: number
   ) => {
-    await fetch(`${BASE_URL}/attempts/answer`, {
+    const res = await fetch(`${BASE_URL}/attempts/answer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ attemptId, questionId, selectedOptionId }),
     });
+    return handleResponse(res);
   },
 
   submitTestFinal: async (attemptId: number): Promise<AttemptResult> => {
     const res = await fetch(`${BASE_URL}/attempts/submit/${attemptId}`, {
       method: "POST",
     });
-    return res.json();
+    return handleResponse(res);
   },
 
   getAttemptsByUserId: async (userId: number): Promise<AttemptResult[]> => {
     const res = await fetch(`${BASE_URL}/attempts/user/${userId}`);
-    return res.json();
+    return handleResponse(res);
   },
 
   createQuestion: async (
@@ -90,25 +118,25 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return res.json();
+    return handleResponse(res);
   },
 
   getQuestionsByTestId: async (
     testId: number
   ): Promise<Question[]> => {
     const res = await fetch(`${BASE_URL}/question/test/${testId}`);
-    return res.json();
+    return handleResponse(res);
   },
 
   deleteQuestion: async (id: number): Promise<string> => {
     const res = await fetch(`${BASE_URL}/question/${id}`, {
       method: "DELETE",
     });
-    return res.json();
+    return handleResponse(res);
   },
 
   getReport: async (): Promise<{ testName: string; attempts: number }[]> => {
     const res = await fetch(`${BASE_URL}/report`);
-    return res.json();
+    return handleResponse(res);
   },
 };
