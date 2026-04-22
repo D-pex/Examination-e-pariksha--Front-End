@@ -76,6 +76,7 @@ export const api = {
     return handleResponse(res);
   },
 
+
   startAttempt: async (userId: number, testId: number) => {
     const res = await fetch(`${BASE_URL}/attempts/start`, {
       method: "POST",
@@ -85,22 +86,15 @@ export const api = {
     return handleResponse(res);
   },
 
-  submitAnswer: async (
-    attemptId: number,
-    questionId: number,
-    selectedOptionId: number
-  ) => {
-    const res = await fetch(`${BASE_URL}/attempts/answer`, {
+  
+  submitAllAnswers: async (data: {
+    attemptId: number;
+    answers: { questionId: number; selectedOptionId: number }[];
+  }): Promise<AttemptResult> => {
+    const res = await fetch(`${BASE_URL}/attempts/submit-all`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ attemptId, questionId, selectedOptionId }),
-    });
-    return handleResponse(res);
-  },
-
-  submitTestFinal: async (attemptId: number): Promise<AttemptResult> => {
-    const res = await fetch(`${BASE_URL}/attempts/submit/${attemptId}`, {
-      method: "POST",
+      body: JSON.stringify(data),
     });
     return handleResponse(res);
   },

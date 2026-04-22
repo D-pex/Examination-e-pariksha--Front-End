@@ -78,15 +78,18 @@ export const AttemptTest: React.FC = () => {
     try {
       const attempt = await api.startAttempt(user.id, Number(test.id));
 
-      for (const [questionId, optionId] of Object.entries(answers)) {
-        await api.submitAnswer(
-          attempt.id,
-          Number(questionId),
-          optionId
-        );
-      }
+      const formattedAnswers = Object.entries(answers).map(
+        ([questionId, optionId]) => ({
+          questionId: Number(questionId),
+          selectedOptionId: optionId,
+        })
+      );
 
-      const finalResult = await api.submitTestFinal(attempt.id);
+      const finalResult = await api.submitAllAnswers({
+        attemptId: attempt.id,
+        answers: formattedAnswers,
+      });
+
       setResult(finalResult);
     } catch (err) {
       console.error(err);

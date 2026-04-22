@@ -18,7 +18,7 @@ export const CreateTest = () => {
     if (user.role !== "admin") {
       navigate("/home");
     }
-  }, []);
+  }, [navigate, user.role]);
 
   const handleCreate = async () => {
     const res = await api.createTest(form);

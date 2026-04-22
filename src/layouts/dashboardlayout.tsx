@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DashboardLayout = ({ children }: any) => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const isAdmin = user.role === "admin";

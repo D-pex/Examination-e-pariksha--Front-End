@@ -19,6 +19,7 @@ export interface Question {
 }
 
 export interface Test {
+  durationMinutes: number;
   id: number;
   name: string;
   subject: string;
@@ -48,7 +49,7 @@ export interface CreateTestRequest {
   name: string;
   subject: string;
   description: string;
-  duration: number;
+  durationMinutes: number;
 }
 
 export interface CreateQuestionRequest {
