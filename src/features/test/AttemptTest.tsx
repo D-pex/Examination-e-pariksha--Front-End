@@ -4,10 +4,10 @@ import { api } from "../../services/api";
 import type { Test, Question, AttemptResult, Answers } from "../../types";
 
 export const AttemptTest: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
 
-  const testId = Number(id);
+  const numericTestId = Number(testId);
 
   const [test, setTest] = useState<Test | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -16,17 +16,17 @@ export const AttemptTest: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [started, setStarted] = useState<boolean>(false);
-
+  const [attemptId, setAttemptId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!testId) return;
+    if (!numericTestId) return;
 
     const loadData = async () => {
       try {
-        const testData = await api.getTestById(testId.toString());
-        const questionData = await api.getQuestionsByTestId(testId);
+        const testData = await api.getTestById(numericTestId.toString());
+        const questionData = await api.getQuestionsByTestId(numericTestId);
 
         setTest(testData);
         setQuestions(questionData);
@@ -39,7 +39,7 @@ export const AttemptTest: React.FC = () => {
     };
 
     loadData();
-  }, [testId]);
+  }, [numericTestId]);
 
   useEffect(() => {
     if (started && timeLeft > 0 && !result) {
@@ -50,49 +50,54 @@ export const AttemptTest: React.FC = () => {
     if (timeLeft === 0 && started && !result) {
       handleSubmit();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, started, result]);
 
-  const handleStart = () => setStarted(true);
+  const handleStart = async () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        alert("User not logged in");
+        navigate("/");
+        return;
+      }
+
+      const user: { id: number } = JSON.parse(storedUser);
+
+      const attempt = await api.startAttempt(user.id, numericTestId);
+
+      setAttemptId(attempt.id);
+      setStarted(true);
+    } catch {
+      alert("Failed to start test");
+    }
+  };
 
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex((prev) => prev + 1);
     } else {
       handleSubmit();
     }
   };
 
   const handleSubmit = async () => {
-    if (!test) return;
+    if (!attemptId) return;
 
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      alert("User not logged in");
-      navigate("/");
-      return;
-    }
-
-    const user = JSON.parse(storedUser) as { id: number };
+    const formattedAnswers = Object.entries(answers).map(
+      ([questionId, optionId]) => ({
+        questionId: Number(questionId),
+        selectedOptionId: optionId,
+      })
+    );
 
     try {
-      const attempt = await api.startAttempt(user.id, Number(test.id));
-
-      const formattedAnswers = Object.entries(answers).map(
-        ([questionId, optionId]) => ({
-          questionId: Number(questionId),
-          selectedOptionId: optionId,
-        })
-      );
-
       const finalResult = await api.submitAllAnswers({
-        attemptId: attempt.id,
+        attemptId,
         answers: formattedAnswers,
       });
 
       setResult(finalResult);
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("Submit failed");
     }
   };

@@ -1,17 +1,22 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import type { CreateQuestionRequest } from "../../types";
+import { QuestionForm } from "../../shared/component/QuestionFrom";
+
 
 export const Question = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
 
-  const [questionText, setQuestionText] = useState("");
-  const [options, setOptions] = useState<string[]>(["", ""]);
-  const [correctIndex, setCorrectIndex] = useState<number | null>(null);
-
-  const handleCreate = async () => {
+  const handleAddQuestion = async ({
+    questionText,
+    options,
+    correctIndex,
+  }: {
+    questionText: string;
+    options: string[];
+    correctIndex: number;
+  }) => {
     if (!testId) return;
 
     const numericTestId = Number(testId);
@@ -21,39 +26,15 @@ export const Question = () => {
       return;
     }
 
-    const trimmedQuestion = questionText.trim();
-
-    if (!trimmedQuestion) {
-      alert("Question cannot be empty");
-      return;
-    }
-
-    const trimmedOptions = options.map((o) => o.trim());
-
-    if (trimmedOptions.some((o) => !o)) {
-      alert("Options cannot be empty");
-      return;
-    }
-
-    if (trimmedOptions[0] === trimmedOptions[1]) {
-      alert("Options must be different");
-      return;
-    }
-
-    if (correctIndex === null) {
-      alert("Select correct answer");
-      return;
-    }
-
     const payload: CreateQuestionRequest = {
-      questionText: trimmedQuestion,
+      questionText,
       options: [
         {
-          optionText: trimmedOptions[0],
+          optionText: options[0],
           isCorrect: correctIndex === 0,
         },
         {
-          optionText: trimmedOptions[1],
+          optionText: options[1],
           isCorrect: correctIndex === 1,
         },
       ],
@@ -62,55 +43,43 @@ export const Question = () => {
 
     try {
       await api.createQuestion(payload);
-      setQuestionText("");
-      setOptions(["", ""]);
-      setCorrectIndex(null);
       alert("Question added successfully");
     } catch {
       alert("Failed to add question");
     }
   };
 
+  const handlePublish = async () => {
+    if (!testId) return;
+
+    const numericTestId = Number(testId);
+
+    if (isNaN(numericTestId)) {
+      alert("Invalid Test ID");
+      return;
+    }
+
+    try {
+      await api.publishTest(numericTestId);
+      alert("Test Published Successfully");
+      navigate("/admin/tests");
+    } catch {
+      alert("Failed to publish test");
+    }
+  };
+
   return (
-    <div className="bg-white p-4 shadow rounded max-w-md">
-      <h2 className="font-bold mb-3">Add Question</h2>
+    <div className="bg-white p-4 shadow rounded max-w-md mx-auto mt-10">
+      <h2 className="font-bold mb-3 text-lg">Add Question</h2>
 
-      <label className="block mb-1 font-medium">Question</label>
-      <input
-        placeholder="Enter question"
-        className="border p-2 w-full mb-3"
-        value={questionText}
-        onChange={(e) => setQuestionText(e.target.value)}
-      />
+      <QuestionForm onSubmit={handleAddQuestion} />
 
-      {options.map((opt, i) => (
-        <div key={i} className="flex items-center gap-2 mb-3">
-          <input
-            type="radio"
-            name="correct"
-            checked={correctIndex === i}
-            onChange={() => setCorrectIndex(i)}
-          />
-
-          <input
-            placeholder={`Option ${i + 1}`}
-            className="border p-2 w-full"
-            value={opt}
-            onChange={(e) => {
-              const newOptions = [...options];
-              newOptions[i] = e.target.value;
-              setOptions(newOptions);
-            }}
-          />
-        </div>
-      ))}
-
-      <div className="flex gap-2 mt-3">
+      <div className="flex gap-2 mt-4">
         <button
-          onClick={handleCreate}
-          className="bg-green-500 text-white p-2 w-full rounded"
+          onClick={handlePublish}
+          className="bg-yellow-500 text-white p-2 w-full rounded"
         >
-          Save
+          Publish Test
         </button>
 
         <button

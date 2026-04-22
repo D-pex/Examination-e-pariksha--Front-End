@@ -44,7 +44,7 @@ export const api = {
   },
 
   getAdminTests: async (): Promise<Test[]> => {
-    const res = await fetch(`${BASE_URL}/tests/all`);
+    const res = await fetch(`${BASE_URL}/tests/admin`);
     return handleResponse(res);
   },
 
@@ -62,31 +62,40 @@ export const api = {
     return handleResponse(res);
   },
 
-  publishTest: async (testId: number): Promise<string> => {
+  publishTest: async (testId: number): Promise<void> => {
     const res = await fetch(`${BASE_URL}/tests/${testId}/publish`, {
-      method: "PUT",
+      method: "PATCH",
     });
-    return handleResponse(res);
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Publish failed");
+    }
   },
 
-  deleteTest: async (id: number): Promise<string> => {
+  deleteTest: async (id: number): Promise<void> => {
     const res = await fetch(`${BASE_URL}/tests/${id}`, {
       method: "DELETE",
     });
-    return handleResponse(res);
-  },
 
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Delete failed");
+    }
+  },
 
   startAttempt: async (userId: number, testId: number) => {
     const res = await fetch(`${BASE_URL}/attempts/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, testId }),
+      body: JSON.stringify({
+        userId,
+        testId
+      }),
     });
     return handleResponse(res);
   },
 
-  
   submitAllAnswers: async (data: {
     attemptId: number;
     answers: { questionId: number; selectedOptionId: number }[];
@@ -122,11 +131,15 @@ export const api = {
     return handleResponse(res);
   },
 
-  deleteQuestion: async (id: number): Promise<string> => {
+  deleteQuestion: async (id: number): Promise<void> => {
     const res = await fetch(`${BASE_URL}/question/${id}`, {
       method: "DELETE",
     });
-    return handleResponse(res);
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Delete failed");
+    }
   },
 
   getReport: async (): Promise<{ testName: string; attempts: number }[]> => {

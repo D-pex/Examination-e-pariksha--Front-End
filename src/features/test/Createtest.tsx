@@ -14,6 +14,8 @@ export const CreateTest = () => {
     durationMinutes: 60,
   });
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (user.role !== "admin") {
       navigate("/home");
@@ -21,9 +23,21 @@ export const CreateTest = () => {
   }, [navigate, user.role]);
 
   const handleCreate = async () => {
-    const res = await api.createTest(form);
-    alert("Test Created");
-    navigate(`/create-question/${res.id}`);
+    try {
+      if (!form.name || !form.subject) return;
+
+      setLoading(true);
+
+      const res = await api.createTest(form);
+
+      if (!res?.id) return;
+
+      navigate(`/create-question/${res.id}`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,7 +63,9 @@ export const CreateTest = () => {
           placeholder="Description"
           className="border p-2 w-full mb-3 rounded-lg"
           value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, description: e.target.value })
+          }
         />
 
         <input
@@ -66,9 +82,10 @@ export const CreateTest = () => {
 
         <button
           onClick={handleCreate}
-          className="bg-green-600 text-white p-2.5 w-full rounded-lg"
+          disabled={loading}
+          className="bg-green-600 text-white p-2.5 w-full rounded-lg disabled:opacity-50"
         >
-          Create Test
+          {loading ? "Creating..." : "Create Test"}
         </button>
       </div>
     </div>
