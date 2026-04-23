@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
-import type { Test, Question, AttemptResult, Answers } from "../../types";
+import type { Test, Question } from "../../types";
+
+type Answers = {
+  [key: number]: number;
+};
 
 export const AttemptTest: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -14,11 +18,9 @@ export const AttemptTest: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [result, setResult] = useState<AttemptResult | null>(null);
   const [started, setStarted] = useState<boolean>(false);
   const [attemptId, setAttemptId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!numericTestId) return;
@@ -32,7 +34,7 @@ export const AttemptTest: React.FC = () => {
         setQuestions(questionData);
         setTimeLeft((testData.durationMinutes || 60) * 60);
       } catch {
-        setError("Failed to load test");
+        alert("Failed to load test");
       } finally {
         setLoading(false);
       }
@@ -42,26 +44,25 @@ export const AttemptTest: React.FC = () => {
   }, [numericTestId]);
 
   useEffect(() => {
-    if (started && timeLeft > 0 && !result) {
+    if (started && timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
       return () => clearTimeout(timer);
     }
 
-    if (timeLeft === 0 && started && !result) {
+    if (timeLeft === 0 && started) {
       handleSubmit();
     }
-  }, [timeLeft, started, result]);
+  }, [timeLeft, started]);
 
   const handleStart = async () => {
     try {
       const storedUser = localStorage.getItem("user");
       if (!storedUser) {
-        alert("User not logged in");
         navigate("/");
         return;
       }
 
-      const user: { id: number } = JSON.parse(storedUser);
+      const user = JSON.parse(storedUser) as { id: number };
 
       const attempt = await api.startAttempt(user.id, numericTestId);
 
@@ -91,49 +92,24 @@ export const AttemptTest: React.FC = () => {
     );
 
     try {
-      const finalResult = await api.submitAllAnswers({
+      const result = await api.submitAllAnswers({
         attemptId,
         answers: formattedAnswers,
       });
 
-      setResult(finalResult);
+      navigate("/result", { state: result });
     } catch {
       alert("Submit failed");
     }
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!test) return <div className="p-6">No test found</div>;
-
-  if (result) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h1
-          className={`text-3xl font-bold ${
-            result.ispassed ? "text-green-500" : "text-red-500"
-          }`}
-        >
-          {result.ispassed ? "Passed 🎉" : "Failed ❌"}
-        </h1>
-
-        <p className="text-xl mt-2">Score: {result.totalScore}</p>
-
-        <button
-          onClick={() => navigate("/home")}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Back to Home
-        </button>
-      </div>
-    );
-  }
 
   if (!started) {
     return (
       <div className="p-6 max-w-xl mx-auto bg-white shadow rounded">
         <h1 className="text-2xl font-bold">{test.name}</h1>
-
         <p className="mt-2 text-gray-600">{test.description}</p>
 
         <div className="mt-4 space-y-2">
@@ -177,7 +153,6 @@ export const AttemptTest: React.FC = () => {
             <input
               type="radio"
               name={q.id.toString()}
-              value={opt.id}
               checked={answers[q.id] === opt.id}
               onChange={() =>
                 setAnswers({ ...answers, [q.id]: opt.id })
@@ -193,9 +168,7 @@ export const AttemptTest: React.FC = () => {
         onClick={handleNext}
         className="mt-4 w-full bg-blue-500 text-white py-2 rounded"
       >
-        {currentIndex === questions.length - 1
-          ? "Submit Test"
-          : "Next"}
+        {currentIndex === questions.length - 1 ? "Submit Test" : "Next"}
       </button>
     </div>
   );

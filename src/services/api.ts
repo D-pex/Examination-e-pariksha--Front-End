@@ -88,10 +88,7 @@ export const api = {
     const res = await fetch(`${BASE_URL}/attempts/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        testId
-      }),
+      body: JSON.stringify({ userId, testId }),
     });
     return handleResponse(res);
   },
