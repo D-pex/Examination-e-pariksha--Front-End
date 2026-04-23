@@ -26,7 +26,7 @@ export default function Admin() {
         </button>
 
         <button
-          onClick={() => navigate("/admin/reports")}
+          onClick={() => navigate("/admin/report")}
           className="p-4 bg-blue-500 text-white rounded-xl shadow"
         >
           Reports
