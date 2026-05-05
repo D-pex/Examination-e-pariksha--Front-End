@@ -142,5 +142,6 @@ export const api = {
   getReport: async (): Promise<{ testName: string; attempts: number }[]> => {
     const res = await fetch(`${BASE_URL}/report`);
     return handleResponse(res);
-  },
+  }, 
+  
 };
